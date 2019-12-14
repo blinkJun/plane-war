@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Document</title>
+	<link rel="stylesheet" href="dahuiji.css" />
+
+	<script>
+window.onload=function(){
+	new engine();
+};
+
+
+/*游戏开始引擎*/
+function engine(){
+	this.div=document.getElementById('body_main');
+	this.ul=document.getElementById('options');
+	this.li=this.ul.children;
+	this.Score=0;	
+	this.fnclick();
+	this.movebg();		
+}
+/*start*/
+engine.prototype.start=function(){
+	this.myPlane();
+	this.moveMyplane();
+	this.fire();
+	this.enemy();
+}
+/*engine.prototype.gift=function(){
+	this.giftDiv=document.createElement('div');
+	this.giftDiv.className="doublebullet";
+	document.body.appendChild(this.giftDiv);
+	this.randomPlace=engine.div.offsetLeft+Math.random()*engine.div.offsetWidth-this.enemyPlane_small.offsetWidth;
+	this.randomPlace=this.randomPlace<engine.div.offsetLeft?engine.div.offsetLeft:this.randomPlace
+	this.enemyPlane_small.style.left=this.randomPlace+'px';
+	this.enemyPlane_small.style.top=engine.div.offsetTop-this.enemyPlane_small.offsetHeight+'px';
+
+}*/
+
+/*敌机*/
+engine.prototype.enemy=function(){
+	var _this=this
+	this.createEnemyplaneSmall_timer=setInterval(function(){
+		Math.random()>=0.5?new enemy_plane(_this,"enemy-small",3):"";
+	},500);
+	this.createEnemyplaneMiddle_timer=setInterval(function(){
+		Math.random()>=0.5?new enemy_plane(_this,"enemy-middle",2):"";
+	},5000);
+	this.createEnemyplaneBig_timer=setInterval(function(){
+		Math.random()>=0.5?new enemy_plane(_this,"enemy-large",1):"";
+	},10000);
+}
+
+/*BOSS*/
+function boss(){
+
+}
+/*敌机*/
+function enemy_plane(engine,size,speed){
+	var _this=this
+	this.smallplaneTop=0;
+	this.attackNum=0;
+	this.enemyPlane_small=document.createElement('div');
+	this.enemyPlane_small.className=size;
+	document.body.appendChild(this.enemyPlane_small);
+	this.randomPlace=engine.div.offsetLeft+Math.random()*engine.div.offsetWidth-this.enemyPlane_small.offsetWidth;
+	this.randomPlace=this.randomPlace<engine.div.offsetLeft?engine.div.offsetLeft:this.randomPlace
+	this.enemyPlane_small.style.left=this.randomPlace+'px';
+	this.enemyPlane_small.style.top=engine.div.offsetTop-this.enemyPlane_small.offsetHeight+'px';
+	this.enemyPlane_small.timer=setInterval(function(){
+		var meetBullet=document.getElementsByClassName('bullet');
+		for(i=0;i<meetBullet.length;i++){
+			if(meetBullet[i].offsetTop>=_this.enemyPlane_small.offsetTop&&meetBullet[i].offsetTop<=_this.enemyPlane_small.offsetTop+_this.enemyPlane_small.offsetHeight){
+				if(meetBullet[i].offsetLeft>=_this.enemyPlane_small.offsetLeft&&meetBullet[i].offsetLeft<=_this.enemyPlane_small.offsetLeft+_this.enemyPlane_small.offsetWidth){
+					if(size=="enemy-middle"&&_this.attackNum<=5){
+						_this.attackNum++;
+						continue;
+					}
+					if(size=="enemy-large"&&_this.attackNum<=30){
+						_this.attackNum++;
+						continue;
+					}
+					_this.destoryplane(meetBullet[i],_this,size,engine);
+					if(engine.Score>=500&&engine.Score<=550){
+						clearInterval(engine.bulletTimer);
+						engine.bulletTimer=setInterval(function(){
+							var a=new bullet();
+							a.double_bullet(engine)
+						},engine.hz)
+						clearInterval(engine.createEnemyplaneSmall_timer)
+						engine.createEnemyplaneSmall_timer=setInterval(function(){
+							Math.random()>=0.5?new enemy_plane(engine,"enemy-small",3):"";
+						},200);
+					}
+					if(engine.Score>=1000&&engine.Score<=1100){
+						clearInterval(engine.createEnemyplaneMiddle_timer)
+						engine.createEnemyplaneMiddle_timer=setInterval(function(){
+							Math.random()>=0.5?new enemy_plane(engine,"enemy-middle",2):"";
+						},3000);
+						clearInterval(engine.bulletTimer);
+						engine.bulletTimer=setInterval(function(){
+							var a=new bullet();
+							a.double_bullet(engine)
+						},_this.hz*49/50)
+					}
+					if(engine.Score>=3000&&engine.Score<=3200){
+						clearInterval(engine.createEnemyplaneBig_timer)
+						engine.createEnemyplaneBig_timer=setInterval(function(){
+							Math.random()>=0.5?new enemy_plane(engine,"enemy-large",1):"";
+						},6000);
+						clearInterval(engine.bulletTimer);
+						engine.bulletTimer=setInterval(function(){
+							var a=new bullet();
+							a.double_bullet(engine)
+						},_this.hz*9/10)
+					}
+					if(engine.Score>=4000&&engine.Score<=4200){
+						clearInterval(engine.createEnemyplaneBig_timer)
+						engine.createEnemyplaneBig_timer=setInterval(function(){
+							Math.random()>=0.5?new enemy_plane(engine,"enemy-large",1):"";
+						},4000);
+						clearInterval(engine.bulletTimer);
+						engine.bulletTimer=setInterval(function(){
+							var a=new bullet();
+							a.double_bullet(engine);
+							a.oneBullet(engine);
+						},_this.hz*13/15)
+					}	
+				}
+			}
+		}
+		if(engine.me.offsetTop>=_this.enemyPlane_small.offsetTop&&engine.me.offsetTop<=_this.enemyPlane_small.offsetTop+_this.enemyPlane_small.offsetHeight){
+				if(engine.me.offsetLeft>=_this.enemyPlane_small.offsetLeft&&engine.me.offsetLeft<=_this.enemyPlane_small.offsetLeft+_this.enemyPlane_small.offsetWidth){
+					clearInterval(engine.bulletTimer);
+					engine.destoryMyplane();
+					document.onmousemove=function(){};
+					setTimeout(function(){
+						clearInterval(_this.enemyPlane_small.timer);
+						_this.reset=confirm("你的得分是："+engine.Score+"------是否重新挑战？")
+						if(_this.reset){
+							window.location.reload(true)
+						}
+					},5000)	
+				}
+			}
+		if(_this.enemyPlane_small.offsetTop>=engine.div.offsetHeight){
+			clearInterval(_this.enemyPlane_small.timer);
+			document.body.removeChild(_this.enemyPlane_small);
+		}
+		_this.enemyPlane_small.style.top=_this.enemyPlane_small.offsetTop+speed+'px'
+	},30)
+}
+enemy_plane.prototype.destoryplane=function(bullet,_this,size,engine){
+	clearTimeout(bullet.remove);
+	clearInterval(bullet.movetimer);
+	clearInterval(_this.enemyPlane_small.timer);
+	var Scoretitle=document.getElementsByTagName('h1')[0];
+	document.body.removeChild(bullet);
+	_this.enemyPlane_small.className=size+"die1";
+	engine.Score+=5;
+	setTimeout(function(){
+		_this.enemyPlane_small.className=size+"die2";
+	},100)
+	setTimeout(function(){
+		_this.enemyPlane_small.className=size+"die3"
+	},150)
+	if(size=="enemy-middle"){
+		setTimeout(function(){
+			_this.enemyPlane_small.className=size+"die4";
+			engine.Score+=5;
+		},600);
+		setTimeout(function(){
+			document.body.removeChild(_this.enemyPlane_small)
+		},1000);
+	}
+	if(size=="enemy-large"){
+		setTimeout(function(){
+			_this.enemyPlane_small.className=size+"die5";
+			engine.Score+=5;
+		},350)
+		setTimeout(function(){
+			_this.enemyPlane_small.className=size+"die6";
+			engine.Score+=5;
+		},800);
+		setTimeout(function(){
+			document.body.removeChild(_this.enemyPlane_small)
+		},2000);
+	}else{
+		setTimeout(function(){
+			document.body.removeChild(_this.enemyPlane_small)
+		},800);
+	}
+	Scoretitle.innerHTML="Score:"+engine.Score;
+}
+/*开火*/
+engine.prototype.fire=function(){
+	var _this=this;
+	this.bulletTimer=setInterval(function(){
+		var a=new bullet();
+		a.oneBullet(_this)
+	},_this.hz)
+}
+/*子弹*/
+function bullet(){}
+bullet.prototype.oneBullet=function(engine){
+	var _this=this;
+	this.div=document.createElement('div');
+	this.div.className="bullet";
+	document.body.appendChild(this.div);
+	this.div.style.left=engine.me.offsetLeft+engine.me.offsetWidth/2-this.div.offsetWidth/2+'px';
+	this.div.style.top=engine.me.offsetTop-this.div.offsetHeight+'px';
+	this.div.num=0
+	this.div.movetimer=setInterval(function(){
+		_this.div.num++
+		var top=_this.div.offsetTop-engine.ul.offsetTop-_this.div.num;
+		if(top<=0){
+			_this.destory(_this.div);
+			_this.div.remove=setTimeout(function(){
+				document.body.removeChild(_this.div);
+			},300)
+		}
+		_this.meetBoom("enemy-middle",_this.div);
+		_this.meetBoom("enemy-large",_this.div)
+		_this.div.style.top=top+'px'
+	},15)
+}
+bullet.prototype.double_bullet=function(engine){
+	var _this=this;
+	this.enemy_smalldie=0;
+	this.enemy_smalldie_timer=""
+	this.div1=document.createElement('div');
+	this.div2=document.createElement('div');
+	this.div1.className="bullet";
+	this.div2.className="bullet";
+	document.body.appendChild(this.div1);
+	document.body.appendChild(this.div2);
+	this.div1.style.left=engine.me.offsetLeft+engine.me.offsetWidth/5-this.div1.offsetWidth/2+'px';
+	this.div1.style.top=engine.me.offsetTop-this.div1.offsetHeight+engine.me.offsetHeight/3+'px';
+	this.div2.style.left=engine.me.offsetLeft+engine.me.offsetWidth*4/5-this.div1.offsetWidth/2+'px';
+	this.div2.style.top=engine.me.offsetTop-this.div1.offsetHeight+engine.me.offsetHeight/3+'px';
+	this.div1.num=0;
+	this.div2.num=0
+	this.div1.movetimer=setInterval(function(){
+		_this.div1.num++
+		var top=_this.div1.offsetTop-engine.ul.offsetTop-_this.div1.num;
+		if(top<=0){
+			_this.destory(_this.div1);
+			_this.div1.remove=setTimeout(function(){
+				document.body.removeChild(_this.div1);
+			},300)
+		}
+		_this.meetBoom("enemy-middle",_this.div1);
+		_this.meetBoom("enemy-large",_this.div1)
+		_this.div1.style.top=top+'px'
+	},15)
+	this.div2.movetimer=setInterval(function(){
+		_this.div2.num++
+		var top=_this.div2.offsetTop-engine.ul.offsetTop-_this.div2.num;
+		if(top<=0){
+			_this.destory(_this.div2);
+			_this.div2.remove=setTimeout(function(){
+				document.body.removeChild(_this.div2);
+			},300)
+		}
+		_this.meetBoom("enemy-middle",_this.div2)
+		_this.meetBoom("enemy-large",_this.div2)
+		_this.div2.style.top=top+'px'
+	},15)
+}
+bullet.prototype.meetBoom=function(className,obj){
+	var enemy_plane=document.getElementsByClassName(className);
+		for(i=0;i<enemy_plane.length;i++){
+			if(obj.offsetTop>enemy_plane[i].offsetTop&&obj.offsetTop<enemy_plane[i].offsetTop+enemy_plane[i].offsetHeight){
+				if(obj.offsetLeft>enemy_plane[i].offsetLeft&&obj.offsetLeft<enemy_plane[i].offsetLeft+enemy_plane[i].offsetWidth){
+					this.destory(obj)
+					obj.remove=setTimeout(function(){
+						obj.style.display="none"
+					},320)
+				}
+			}
+		}
+}
+bullet.prototype.destory=function(obj){
+		clearInterval(obj.movetimer);
+		obj.className="bullet_die";
+		setTimeout(function(){
+			obj.className="bullet_die1"
+		},150)
+		setTimeout(function(){
+			obj.className="bullet_die2"
+		},200)
+		setTimeout(function(){
+			obj.className="bullet_die3"
+		},250)	
+}
+/*我的飞机*/
+engine.prototype.myPlane=function(){
+	this.me=document.createElement('div');
+	this.me.className="my-warplain";
+	document.body.appendChild(this.me);
+	this.me.style.left=this.div.offsetLeft+this.div.offsetWidth/2-this.me.offsetWidth/2+'px';
+	this.me.style.top=this.div.offsetHeight-this.me.offsetHeight+'px'
+}
+/*我的飞机爆炸了#24*/
+engine.prototype.destoryMyplane=function(){
+	this.me.className="my-warplaindie1";
+	var _this=this
+		setTimeout(function(){
+			_this.me.className="my-warplaindie2"
+		},150)
+		setTimeout(function(){
+			_this.me.className="my-warplaindie3"
+		},600)
+		setTimeout(function(){
+			_this.me.className="my-warplaindie4"
+		},1000);
+		setTimeout(function(){
+			_this.me.style.display="none"
+		},1200)	
+}
+/*移动我的飞机*/
+engine.prototype.moveMyplane=function(){
+	var _this=this
+	document.onmousemove=function(event){
+		var e=event||window.event;
+		var left=e.clientX-_this.me.offsetWidth/2
+		left=left<_this.div.offsetLeft?_this.div.offsetLeft:left;
+		left=left>_this.div.offsetLeft+_this.div.offsetWidth-_this.me.offsetWidth?_this.div.offsetLeft+_this.div.offsetWidth-_this.me.offsetWidth:left
+		_this.me.style.left=left+'px';
+		_this.me.style.top=e.clientY-_this.me.offsetHeight/2+'px';
+	}
+	this.me.style.cursor="none"
+}
+
+/*背景图移动*/
+engine.prototype.movebg=function(){
+	this.num=0;
+	var _this=this
+	this.bgtimer=setInterval(function(){
+		_this.num+=10
+		_this.div.style.background="url(images/bg.jpg) repeat-y 0px "+_this.num+"px"
+	},15);
+}
+
+
+/*难度点击函数*/
+engine.prototype.fnclick=function(){
+	var _this=this
+	this.loadingnum=1;
+	for(i=0;i<this.li.length;i++){
+		this.li[i].index=i
+		this.li[i].onclick=function(){
+			_this.Hz(this);  //调整难度
+			_this.loading()	 //添加载入动画
+		}
+	}
+}
+
+
+/*载入动画4S*/
+engine.prototype.loading=function(){
+	var _this=this
+	logo.show();//载入logo图
+	load.show();//载入load图
+	this.loadingtimer=setInterval(function(){
+		if(_this.loadingnum==3){
+			_this.loadingnum=1
+		}else{
+			_this.loadingnum++
+		}
+		load.ele.style.background="url(images/loading"+_this.loadingnum+".png) no-repeat"
+	},200)
+	setTimeout(function(){
+		clearInterval(_this.loadingtimer);
+		logo.remove();
+		load.remove();
+		_this.start();
+	},4000)
+}
+
+
+/*调整难度频率*/
+engine.prototype.Hz=function(obj){
+	switch(obj.index){
+		case 0:this.hz=600;break;
+		case 1:this.hz=400;break;
+		case 2:this.hz=200;break;
+		case 3:this.hz=100;break;
+	}
+	this.ul.style.display="none"
+};
+
+
+
+var logo={
+	ele:document.createElement('div'),
+	show:function(){
+		this.ele.className="logo";
+		document.body.appendChild(this.ele)
+	},
+	remove:function(){
+		document.body.removeChild(this.ele)
+	}
+}
+
+
+var load={
+	ele:document.createElement('div'),
+	show:function(){
+		this.ele.className="loading";
+		document.body.appendChild(this.ele)
+	},
+	remove:function(){
+		document.body.removeChild(this.ele)
+	}
+}
+
+
+
+	
+
+	</script>
+
+</head>
+<body>
+
+	<div id="body_main" class="main">
+		<h1 class="score">score:</h1>
+		<ul id="options" class="options">
+			<li value="1">炼狱</li>
+			<li value="2">挑战</li>
+			<li value="3">常规</li>
+			<li value="4">你开心就好</li>
+		</ul>
+	</div>
+</body>
+</html>
